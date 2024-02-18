@@ -1,19 +1,24 @@
 package com.BuyBook.bookservice.services;
 
 import java.io.IOException;
+import java.text.ParseException;
 import java.time.Instant;
+import java.util.List;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
-import com.BuyBook.bookservice.configs.AmazonS3Config;
+import com.BuyBook.bookservice.Utils.AmazonS3Config;
+import com.BuyBook.bookservice.Utils.BookUtility;
 import com.BuyBook.bookservice.entity.AddBookRequest;
 import com.BuyBook.bookservice.entity.Books;
 import com.BuyBook.bookservice.repository.BookRepository;
 import com.amazonaws.AmazonServiceException;
 import com.amazonaws.SdkClientException;
+import com.amazonaws.services.s3.model.CannedAccessControlList;
 
+import com.amazonaws.services.s3.model.PutObjectRequest;
 
 import lombok.AllArgsConstructor;
 
@@ -26,6 +31,8 @@ public class BookServiceImpl implements BookService{
 	 @Autowired
 	  private AmazonS3Config amazonS3Config;
 	 
+	 @Autowired
+	 private BookUtility bookUtility;
 	 
 	 
 	 @Value("${aws.s3.bucketName}")
@@ -34,56 +41,53 @@ public class BookServiceImpl implements BookService{
 	
 	@Override
 	public Books addBook(AddBookRequest request) {
-		// TODO Auto-generated method stub
-		// Convert the Incoming Request to Book Type
-		
 		
 		if (request.getImage().getSize() > 6048576) { // 1MB limit
             throw new IllegalArgumentException("Image size exceeds limit");
         }
 		
-		String fileName = Instant.now().toString()+ request.getImage().getName();
+		
+		String fileName = Instant.now().toString()+ request.getImage().getOriginalFilename();
+		
+		        
 		try {
-			amazonS3Config.amazonS3Client().putObject(bucketName,fileName,request.getImage().getContentType()t)
+			PutObjectRequest putObjectRequest = new PutObjectRequest(bucketName, fileName,request.getImage().getInputStream(),null).withCannedAcl(CannedAccessControlList.PublicRead);
+			amazonS3Config.amazonS3Client().putObject(putObjectRequest);
+			
 		} catch (AmazonServiceException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			String message = "Error occured while uploading Image";
+			return null;
 		} catch (SdkClientException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			String message = "Error occured while uploading Image";
+			return null;
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
+			String message = "Error occured while uploading Image";
+			return null;
 		}
 		
 		
-        
         String imageUrl = String.format("https://%s.s3.%s.amazonaws.com/%s", bucketName,amazonS3Config.getRegion() , fileName);
         
-        Books newBook = new Books(
-				Long.parseLong("200000"),
-				request.getIsbn(),
-				request.getTitle(),
-				request.getAuthor(),
-				request.getPublisher(),
-				request.getPublicationDate(),
-				request.getPublicationDate(),
-				request.getLanguage(),
-				request.getGenre(),
-				request.getKeywords(),
-				request.getPrice(),
-				imageUrl
-				);
+      
+		// Convert AddBookRequest to Books object to save to DB.
+        Books newBook;
+		try {
+			newBook = bookUtility.convertToBooks(request, imageUrl);
+			Books savedBook =  bookRepository.save(newBook);
+			return savedBook;
+			
+		} catch (Exception e) {
+			String message = "Some error occured";
+			return null;
+		}
 		
-		Books savedBook =  bookRepository.save(newBook);
-		System.out.println(request.toString());
-		return savedBook;
+		
 	}
 
 	@Override
-	public String getAllBooks() {
-		// TODO Auto-generated method stub
-		return null;
+	public List<Books> getAllBooks() {
+		List<Books> allBooks = bookRepository.findAll();
+		return allBooks;
 	}
 
 	@Override

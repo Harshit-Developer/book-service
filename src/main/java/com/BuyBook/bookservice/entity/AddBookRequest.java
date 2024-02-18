@@ -1,6 +1,5 @@
 package com.BuyBook.bookservice.entity;
 
-import java.sql.Date;
 import java.util.List;
 
 import org.springframework.web.multipart.MultipartFile;
@@ -18,7 +17,7 @@ public class AddBookRequest {
     private String title;
 	
 	
-    private String author;
+    private List<String> author;
 	
 	
     private String publisher;
@@ -27,9 +26,9 @@ public class AddBookRequest {
     
     
     private String language;
-    private String genre;
+    private List<String> genre;
     
-    private String keywords;
+    private List<String> keywords;
     private String description;
     
     

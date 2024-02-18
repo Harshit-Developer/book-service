@@ -1,4 +1,4 @@
-package com.BuyBook.bookservice.configs;
+package com.BuyBook.bookservice.Utils;
 import com.amazonaws.auth.AWSStaticCredentialsProvider;
 import com.amazonaws.auth.BasicAWSCredentials;
 import com.amazonaws.services.s3.AmazonS3;
@@ -6,9 +6,12 @@ import com.amazonaws.services.s3.AmazonS3ClientBuilder;
 
 import lombok.Data;
 
+import java.io.File;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.web.multipart.MultipartFile;
 
 @Configuration
 @Data
@@ -30,6 +33,7 @@ public class AmazonS3Config {
                 .withCredentials(new AWSStaticCredentialsProvider(awsCredentials))
                 .build();
     }
+    
     
     @Bean
     public String string() {
