@@ -5,10 +5,4 @@ spring:
  application:
   name: book-service
   
-aws:
- accessKey: AKIAVXNPVP2AGJIL3AUS
- secretKey: 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
- region: eu-central-1
- s3:
-  bucketName: book-images-buybooks
   
